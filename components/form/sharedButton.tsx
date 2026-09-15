@@ -1,4 +1,4 @@
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
 import {
     GestureResponderEvent,

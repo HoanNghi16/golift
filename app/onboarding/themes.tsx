@@ -1,9 +1,11 @@
 import SharedButton from "@/components/form/sharedButton";
 import SharedSelect from "@/components/form/sharedSelect";
 import PrimaryHeader from "@/components/layout/header";
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
+import { useTitle } from "@/providers/titleProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import {
     Image,
     StyleSheet,
@@ -19,11 +21,15 @@ export default function ThemeConfig() {
     } = useColor();
 
     const styles = createStyles(colors);
+    
+    const { setHeaderTitle } = useTitle()
 
+    useEffect(()=>{
+        setHeaderTitle("Chọn màu yêu thích")
+    },[])
     return (
         <View style={styles.startCont}>
             <PrimaryHeader
-                title="Chọn màu yêu thích"
                 variant="onboard"
             />
 
@@ -65,7 +71,7 @@ export default function ThemeConfig() {
                                 }
                             }
                             selected={selectedTheme}
-                            placeholder="Chọn theme"
+                            placeholder="theme"
                         />
 
                     </View>

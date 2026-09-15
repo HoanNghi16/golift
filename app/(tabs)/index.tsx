@@ -1,4 +1,5 @@
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
+import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -15,12 +16,15 @@ import {
 } from "react-native";
 
 export default function HomeScreen() {
+    const { setHeaderTitle } = useTitle()
     const { colors } = useColor();
     const styles = createStyles(colors);
     const [viewCheckin, setViewCheckin] = useState<boolean>(false);
     const timerRef = useRef<number | null>(null);
     const [selectedCheckinDay, setSelectedCheckinDay] = useState<number | null>(null);
     const [pressedIndex, setPressedIndex] = useState<number | null>(null);
+
+    setHeaderTitle("Tổng quan")
 
     const clearPressTimer = () => {
         if (timerRef.current) {

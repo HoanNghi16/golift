@@ -1,4 +1,4 @@
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
 import { StyleSheet, Text, View } from "react-native";
 

@@ -1,4 +1,4 @@
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
 import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";

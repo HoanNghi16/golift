@@ -1,5 +1,5 @@
 import SharedButton from "@/components/form/sharedButton";
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Modal, StyleSheet, Text, View } from "react-native";

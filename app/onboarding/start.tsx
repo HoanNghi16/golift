@@ -2,10 +2,11 @@ import SharedButton from "@/components/form/sharedButton";
 import SharedInput from "@/components/form/sharedInput";
 import SharedSelect from "@/components/form/sharedSelect";
 import PrimaryHeader from "@/components/layout/header";
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
+import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Image,
     ScrollView,
@@ -21,12 +22,18 @@ export default function StartProfile() {
 
     const { colors } = useColor();
 
+    const { setHeaderTitle } = useTitle()
+
+    useEffect(()=>{
+        setHeaderTitle("Cấu hình hồ sơ")
+    },[])
+    
+
     const styles = createStyles(colors);
 
     return (
         <View style={styles.startCont}>
             <PrimaryHeader
-                title="Cấu hình hồ sơ"
                 variant="onboard"
             />
 

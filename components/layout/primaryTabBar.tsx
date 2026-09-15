@@ -1,4 +1,4 @@
-import { useColor } from "@/hooks/colorProvider";
+import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
@@ -7,6 +7,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type TabItemProps = {
+    key: string
     icon: keyof typeof Ionicons.glyphMap;
     label: string;
     active: boolean;
@@ -28,7 +29,7 @@ export default function PrimaryTabBar() {
     const pathname = usePathname();
     const router = useRouter();
 
-    const TabItem = ({ icon, activeIcon, label, active, onPress }: Omit<TabItemProps, "colors"> & { activeIcon: keyof typeof Ionicons.glyphMap }) => {
+    const TabItem = ({ key, icon, activeIcon, label, active, onPress }: Omit<TabItemProps, "colors"> & { activeIcon: keyof typeof Ionicons.glyphMap }) => {
         const anim = useRef(new Animated.Value(active ? 1 : 0)).current;
 
         useEffect(() => {
@@ -45,7 +46,7 @@ export default function PrimaryTabBar() {
         });
 
         return (
-            <Pressable key={label} style={styles.tabItem} onPress={onPress} hitSlop={8}>
+            <Pressable key={key} style={styles.tabItem} onPress={onPress} hitSlop={8}>
                 <Ionicons name={active ? activeIcon : icon} size={22} color={active ? colors.primary : colors.textSecondary} />
 
                 <Animated.Text style={[styles.tabLabel, { color }, active && { fontWeight: "700" }]}>
@@ -61,12 +62,12 @@ export default function PrimaryTabBar() {
                 <TabItem
                     {...TABS[0]}
                     active={pathname === TABS[0].route}
-                    onPress={() => router.push(TABS[0].route as any)}
+                    onPress={() => {if(pathname !== TABS[0].route ) router.push(TABS[0].route as any)}}
                 />
                 <TabItem
                     {...TABS[1]}
                     active={pathname === TABS[1].route}
-                    onPress={() => router.push(TABS[1].route as any)}
+                    onPress={() => {if (pathname !== TABS[1].route)router.push(TABS[1].route as any)}}
                 />
 
                 {/* Center Check-in */}
@@ -86,12 +87,12 @@ export default function PrimaryTabBar() {
                 <TabItem
                     {...TABS[2]}
                     active={pathname === TABS[2].route}
-                    onPress={() => router.push(TABS[2].route as any)}
+                    onPress={() => {if (pathname !== TABS[2].route)router.push(TABS[2].route as any)}}
                 />
                 <TabItem
                     {...TABS[3]}
                     active={pathname === TABS[3].route}
-                    onPress={() => router.push(TABS[3].route as any)}
+                    onPress={() => {if (pathname !== TABS[3].route)router.push(TABS[3].route as any)}}
                 />
             </View>
         </View>
