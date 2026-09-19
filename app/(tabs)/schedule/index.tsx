@@ -2,6 +2,7 @@ import SharedButton from "@/components/form/sharedButton";
 import { useColor } from "@/providers/colorProvider";
 import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
+import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -54,7 +55,9 @@ export default function ScheduleScreen() {
                 </View>
                 <Text style={styles.notFound}>Bạn chưa tạo lịch tập nào, hãy tạo một lịch tập</Text>
                 {/* Nút thêm lịch tập mới */}
-                <SharedButton onPress={()=>{}} title="Thay đổi lịch tập"/>
+                <SharedButton onPress={()=>{
+                    router.push("/(tabs)/schedule/createSchelude")
+                }} title="Thay đổi lịch tập"/>
             </View>
         </View>
     );

@@ -132,7 +132,60 @@ export default function HomeScreen() {
                             ))}
                         </View>
                         {/* Lưới ngày */}
-                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        <ScrollView horizontal pagingEnabled={true} showsHorizontalScrollIndicator={false}>
+                            <View style={styles.gridRow}>
+                                {monthCells.map((cell, index) => {
+                                    if (cell === null) {
+                                        return <View key={index} style={styles.dayCell} />;
+                                    }
+
+                                    const isToday = isCurrentMonth && cell === today.getDate();
+                                    const isCheckedIn = checkedInDays.includes(cell);
+
+                                    return (
+                                        <Pressable
+                                            key={index}
+                                            style={styles.dayCell}
+                                            onTouchStart={() => {
+                                                if (!isCheckedIn) return;
+                                                setPressedIndex(index);
+                                                timerRef.current = setTimeout(() => {
+                                                    setSelectedCheckinDay(cell);
+                                                    setViewCheckin(true);
+                                                    setPressedIndex(null);
+                                                }, 500);
+                                            }}
+                                            onTouchEnd={clearPressTimer}
+                                            onTouchCancel={clearPressTimer}
+                                        >
+                                            <ImageBackground
+                                                source={isCheckedIn ? require("@/assets/images/GoLift_logo.png") : undefined}
+                                                style={[
+                                                    styles.dayCircle,
+                                                    isCheckedIn && {...styles.dayCircleChecked, backgroundImage: require("@/assets/images/GoLift_logo.png")},
+                                                    !isCheckedIn && styles.dayCircleUnchecked,
+                                                    isToday && styles.dayCircleToday,
+                                                    pressedIndex === index && styles.dayCirclePressed,
+                                                ]}
+                                            >
+                                                <View
+                                                    style={isCheckedIn && { backgroundColor: "#000000af", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}
+                                                    >
+                                                    <Text
+                                                        style={[
+                                                            styles.dayNumber,
+                                                            isCheckedIn && styles.dayNumberChecked,
+                                                            isToday && styles.dayNumberToday,
+                                                        ]}
+                                                    >
+                                                        {cell}
+                                                    </Text>
+                                                </View>
+                                            </ImageBackground>
+                                        </Pressable>
+                                    );
+                                })}
+                            </View>
                             <View style={styles.gridRow}>
                                 {monthCells.map((cell, index) => {
                                     if (cell === null) {
