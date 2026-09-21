@@ -57,7 +57,6 @@ export default function PrimaryTabBar() {
     };
 
     return (
-        <View style={{ backgroundColor: colors.surface}}>
             <View style={styles.tabContainer}>
                 <TabItem
                     {...TABS[0]}
@@ -95,7 +94,6 @@ export default function PrimaryTabBar() {
                     onPress={() => {if (pathname !== TABS[3].route)router.push(TABS[3].route as any)}}
                 />
             </View>
-        </View>
     );
 }
 
@@ -104,14 +102,17 @@ const createStyles = (colors: colorType, bottomInset: number) =>
         tabContainer: {
             flexDirection: "row",
             alignItems: "center",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            borderRadius: 20,
 
-            width: "100%",
             height: 72 + bottomInset,
 
             backgroundColor: colors.background,
 
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
+            margin: 14,
 
             paddingHorizontal: 6,
             paddingTop: 10,
