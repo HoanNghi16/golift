@@ -1,5 +1,7 @@
 import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
+import { radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import {
     GestureResponderEvent,
     Pressable,
@@ -17,8 +19,8 @@ export default function SharedButton({
     onPress: (e: GestureResponderEvent) => void;
 }) {
     const { colors } = useColor();
-
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const styles = createStyles(colors, scale);
 
     return (
         <Pressable
@@ -27,20 +29,22 @@ export default function SharedButton({
                 styles.button, isPrimaryBackground ? styles.primary : styles.dark ,
             ]}
         >
-            <Text style={styles.text}>
+            <Text style={[styles.text, !isPrimaryBackground && styles.textOnAccent]}>
                 {title}
             </Text>
         </Pressable>
     );
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         button: {
-            padding: 10,
+            minHeight: 48,
+            paddingHorizontal: spacing.lg * scale,
+            paddingVertical: spacing.sm * scale,
             alignItems: "center",
             justifyContent: "center",
-            borderRadius: 10,
+            borderRadius: radius.md,
         },
 
         dark: {
@@ -50,8 +54,11 @@ const createStyles = (colors: colorType) =>
             backgroundColor: colors.background,
         },
         text: {
-            fontSize: 18,
             fontWeight: "bold",
             color: colors.textPrimary,
+            fontSize: typography.bodyLarge,
+        },
+        textOnAccent: {
+            color: colors.onPrimary,
         },
     });

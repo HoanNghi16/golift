@@ -25,7 +25,8 @@ export function ColorProvider({children}:{children: ReactNode}){
         setInitLoading(false)
     },[])
     const theme = useColorScheme()
-    const colors = theme === "dark" ? CUSTOM_THEMES[selectedTheme].DARK_COLORS :  CUSTOM_THEMES[selectedTheme].LIGHT_COLORS 
+    const activeTheme = CUSTOM_THEMES[selectedTheme] ?? CUSTOM_THEMES.default
+    const colors = theme === "dark" ? activeTheme.DARK_COLORS : activeTheme.LIGHT_COLORS
 
     useEffect(() => {
         NavigationBar.setButtonStyleAsync(

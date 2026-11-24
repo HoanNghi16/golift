@@ -1,4 +1,6 @@
 import { useColor } from "@/providers/colorProvider";
+import { radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { colorType } from "@/types/color";
 import { useState } from "react";
 import {
@@ -11,8 +13,8 @@ export default function SharedInput(props: TextInputProps) {
     const [focused, setFocused] = useState(false);
 
     const { colors } = useColor();
-
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const styles = createStyles(colors, scale);
 
     return (
         <TextInput
@@ -34,23 +36,23 @@ export default function SharedInput(props: TextInputProps) {
     );
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         input: {
             width: "100%",
-            height: 52,
+            minHeight: 48,
 
             backgroundColor: colors.background,
 
             borderWidth: 1,
-            borderColor: colors.primary,
+            borderColor: colors.border,
 
-            borderRadius: 14,
+            borderRadius: radius.md,
 
-            paddingHorizontal: 16,
+            paddingHorizontal: spacing.md * scale,
 
             color: colors.textPrimary,
-            fontSize: 16,
+            fontSize: typography.body,
         },
 
         inputFocused: {

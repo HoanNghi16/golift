@@ -1,6 +1,9 @@
 import { useColor } from "@/providers/colorProvider";
 import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
+import { getTabBarContentInset, radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMemo, useRef, useState } from "react";
 import {
     Image,
@@ -18,11 +21,16 @@ import {
 export default function HomeScreen() {
     const { setHeaderTitle } = useTitle()
     const { colors } = useColor();
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const insets = useSafeAreaInsets();
+    const styles = createStyles(colors, scale);
     const [viewCheckin, setViewCheckin] = useState<boolean>(false);
     const timerRef = useRef<number | null>(null);
     const [selectedCheckinDay, setSelectedCheckinDay] = useState<number | null>(null);
     const [pressedIndex, setPressedIndex] = useState<number | null>(null);
+    const monthScrollRef = useRef<ScrollView>(null);
+    const [monthPageWidth, setMonthPageWidth] = useState(0);
+    const isResettingMonthScroll = useRef(false);
 
     setHeaderTitle("Tổng quan")
 
@@ -63,16 +71,77 @@ export default function HomeScreen() {
         return d;
     }, [monthOffset]);
 
-    const monthKey = `${viewedDate.getFullYear()}-${viewedDate.getMonth() + 1}`;
-    const checkedInDays = checkedInDaysByMonth[monthKey] ?? [];
+    const monthOffsets = [-1, 0, 1];
 
-    const monthCells = useMemo(() => getMonthCells(viewedDate), [viewedDate]);
+    const renderMonthGrid = (offset: number) => {
+        const pageDate = new Date(viewedDate.getFullYear(), viewedDate.getMonth() + offset, 1);
+        const pageCells = getMonthCells(pageDate);
+        const pageMonthKey = `${pageDate.getFullYear()}-${pageDate.getMonth() + 1}`;
+        const pageCheckedInDays = checkedInDaysByMonth[pageMonthKey] ?? [];
+        const pageIsCurrentMonth = pageDate.getFullYear() === today.getFullYear() && pageDate.getMonth() === today.getMonth();
+
+        return (
+            <View key={offset} style={[styles.gridRow, { width: monthPageWidth || "100%" }]}>
+                {pageCells.map((cell, index) => {
+                    if (cell === null) return <View key={index} style={styles.dayCell} />;
+
+                    const isToday = pageIsCurrentMonth && cell === today.getDate();
+                    const isCheckedIn = pageCheckedInDays.includes(cell);
+                    return (
+                        <Pressable
+                            key={index}
+                            style={styles.dayCell}
+                            onTouchStart={() => {
+                                if (!isCheckedIn) return;
+                                setPressedIndex(index);
+                                timerRef.current = setTimeout(() => {
+                                    setSelectedCheckinDay(cell);
+                                    setViewCheckin(true);
+                                    setPressedIndex(null);
+                                }, 500);
+                            }}
+                            onTouchEnd={clearPressTimer}
+                            onTouchCancel={clearPressTimer}
+                        >
+                            <ImageBackground
+                                source={isCheckedIn ? require("@/assets/images/GoLift_logo.png") : undefined}
+                                style={[
+                                    styles.dayCircle,
+                                    isCheckedIn && styles.dayCircleChecked,
+                                    !isCheckedIn && styles.dayCircleUnchecked,
+                                    isToday && styles.dayCircleToday,
+                                    pressedIndex === index && styles.dayCirclePressed,
+                                ]}
+                            >
+                                <View style={isCheckedIn ? styles.checkedInOverlay : undefined}>
+                                    <Text style={[
+                                        styles.dayNumber,
+                                        isCheckedIn && styles.dayNumberChecked,
+                                        isToday && styles.dayNumberToday,
+                                    ]}>{cell}</Text>
+                                </View>
+                            </ImageBackground>
+                        </Pressable>
+                    );
+                })}
+            </View>
+        );
+    };
+
+    const handleMonthScroll = (event: any) => {
+        if (isResettingMonthScroll.current || !monthPageWidth) return;
+        const page = Math.round(event.nativeEvent.contentOffset.x / monthPageWidth);
+        if (page === 1) return;
+
+        isResettingMonthScroll.current = true;
+        setMonthOffset((current) => current + (page === 0 ? -1 : 1));
+        requestAnimationFrame(() => {
+            monthScrollRef.current?.scrollTo({ x: monthPageWidth, animated: false });
+            requestAnimationFrame(() => { isResettingMonthScroll.current = false; });
+        });
+    };
 
     const today = new Date();
-    const isCurrentMonth =
-        viewedDate.getFullYear() === today.getFullYear() &&
-        viewedDate.getMonth() === today.getMonth();
-
     const monthTitle = viewedDate.toLocaleDateString("vi-VN", {
         month: "long",
         year: "numeric",
@@ -83,7 +152,7 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+            <StatusBar barStyle="default" backgroundColor={colors.background} />
 
             <View style={styles.content}>
                 {/* Thông báo lịch tập mỗi ngày */}
@@ -96,13 +165,16 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.contentBody} contentContainerStyle={styles.contentBodyInner}>
+                <ScrollView
+                    style={styles.contentBody}
+                    contentContainerStyle={[styles.contentBodyInner, { paddingBottom: getTabBarContentInset(scale, insets.bottom) }]}
+                >
 
                     {/* Lịch tháng */}
                     <View style={styles.calenderView}>
                         {/* Header điều hướng tháng */}
                         <View style={styles.monthHeader}>
-                            <TouchableOpacity
+            <TouchableOpacity
                                 onPress={goPrevMonth}
                                 activeOpacity={0.7}
                                 style={styles.monthNavButton}
@@ -132,113 +204,21 @@ export default function HomeScreen() {
                             ))}
                         </View>
                         {/* Lưới ngày */}
-                        <ScrollView horizontal pagingEnabled={true} showsHorizontalScrollIndicator={false}>
-                            <View style={styles.gridRow}>
-                                {monthCells.map((cell, index) => {
-                                    if (cell === null) {
-                                        return <View key={index} style={styles.dayCell} />;
-                                    }
-
-                                    const isToday = isCurrentMonth && cell === today.getDate();
-                                    const isCheckedIn = checkedInDays.includes(cell);
-
-                                    return (
-                                        <Pressable
-                                            key={index}
-                                            style={styles.dayCell}
-                                            onTouchStart={() => {
-                                                if (!isCheckedIn) return;
-                                                setPressedIndex(index);
-                                                timerRef.current = setTimeout(() => {
-                                                    setSelectedCheckinDay(cell);
-                                                    setViewCheckin(true);
-                                                    setPressedIndex(null);
-                                                }, 500);
-                                            }}
-                                            onTouchEnd={clearPressTimer}
-                                            onTouchCancel={clearPressTimer}
-                                        >
-                                            <ImageBackground
-                                                source={isCheckedIn ? require("@/assets/images/GoLift_logo.png") : undefined}
-                                                style={[
-                                                    styles.dayCircle,
-                                                    isCheckedIn && {...styles.dayCircleChecked, backgroundImage: require("@/assets/images/GoLift_logo.png")},
-                                                    !isCheckedIn && styles.dayCircleUnchecked,
-                                                    isToday && styles.dayCircleToday,
-                                                    pressedIndex === index && styles.dayCirclePressed,
-                                                ]}
-                                            >
-                                                <View
-                                                    style={isCheckedIn && { backgroundColor: "#000000af", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}
-                                                    >
-                                                    <Text
-                                                        style={[
-                                                            styles.dayNumber,
-                                                            isCheckedIn && styles.dayNumberChecked,
-                                                            isToday && styles.dayNumberToday,
-                                                        ]}
-                                                    >
-                                                        {cell}
-                                                    </Text>
-                                                </View>
-                                            </ImageBackground>
-                                        </Pressable>
-                                    );
-                                })}
-                            </View>
-                            <View style={styles.gridRow}>
-                                {monthCells.map((cell, index) => {
-                                    if (cell === null) {
-                                        return <View key={index} style={styles.dayCell} />;
-                                    }
-
-                                    const isToday = isCurrentMonth && cell === today.getDate();
-                                    const isCheckedIn = checkedInDays.includes(cell);
-
-                                    return (
-                                        <Pressable
-                                            key={index}
-                                            style={styles.dayCell}
-                                            onTouchStart={() => {
-                                                if (!isCheckedIn) return;
-                                                setPressedIndex(index);
-                                                timerRef.current = setTimeout(() => {
-                                                    setSelectedCheckinDay(cell);
-                                                    setViewCheckin(true);
-                                                    setPressedIndex(null);
-                                                }, 500);
-                                            }}
-                                            onTouchEnd={clearPressTimer}
-                                            onTouchCancel={clearPressTimer}
-                                        >
-                                            <ImageBackground
-                                                source={isCheckedIn ? require("@/assets/images/GoLift_logo.png") : undefined}
-                                                style={[
-                                                    styles.dayCircle,
-                                                    isCheckedIn && {...styles.dayCircleChecked, backgroundImage: require("@/assets/images/GoLift_logo.png")},
-                                                    !isCheckedIn && styles.dayCircleUnchecked,
-                                                    isToday && styles.dayCircleToday,
-                                                    pressedIndex === index && styles.dayCirclePressed,
-                                                ]}
-                                            >
-                                                <View
-                                                    style={isCheckedIn && { backgroundColor: "#000000af", width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}
-                                                    >
-                                                    <Text
-                                                        style={[
-                                                            styles.dayNumber,
-                                                            isCheckedIn && styles.dayNumberChecked,
-                                                            isToday && styles.dayNumberToday,
-                                                        ]}
-                                                    >
-                                                        {cell}
-                                                    </Text>
-                                                </View>
-                                            </ImageBackground>
-                                        </Pressable>
-                                    );
-                                })}
-                            </View>
+                        <ScrollView
+                            ref={monthScrollRef}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            onLayout={(event) => {
+                                const width = event.nativeEvent.layout.width;
+                                if (width && width !== monthPageWidth) {
+                                    setMonthPageWidth(width);
+                                    requestAnimationFrame(() => monthScrollRef.current?.scrollTo({ x: width, animated: false }));
+                                }
+                            }}
+                            onMomentumScrollEnd={handleMonthScroll}
+                        >
+                            {monthOffsets.map(renderMonthGrid)}
                         </ScrollView>
 
                         {/* Chú thích */}
@@ -327,7 +307,7 @@ function getMonthCells(viewedDate: Date): (number | null)[] {
     return cells;
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         container: {
             flex: 1,
@@ -339,28 +319,27 @@ const createStyles = (colors: colorType) =>
         },
 
         hero: {
-            padding: 16,
-            paddingInline: 16,
-            marginInline: "3%",
-            borderRadius: 20,
+            padding: spacing.md * scale,
+            marginHorizontal: spacing.xs * scale,
+            borderRadius: radius.xl,
             minHeight: "15%",
             alignItems: "flex-start",
             justifyContent: "center",
             backgroundColor: colors.primary,
-            gap: 6,
+            gap: spacing.xs,
         },
 
         subtitle: {
-            color: colors.textPrimary,
-            fontSize: 14,
+            color: colors.onPrimary,
+            fontSize: typography.footnote,
             opacity: 0.85,
         },
 
         workoutName: {
-            color: colors.textPrimary,
-            fontSize: 20,
+            color: colors.onPrimary,
+            fontSize: typography.title,
             fontWeight: "700",
-            marginBottom: 8,
+            marginBottom: spacing.xs,
         },
         dayCirclePressed: {
             opacity: 0.6,
@@ -369,95 +348,95 @@ const createStyles = (colors: colorType) =>
 
         startButton: {
             backgroundColor: colors.surface,
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 30,
+            paddingVertical: spacing.xs,
+            paddingHorizontal: spacing.md,
+            borderRadius: radius.pill,
             alignSelf: "flex-start",
         },
 
         startButtonText: {
-            color: colors.textSecondary,
-            fontSize: 13,
+            color: colors.onSurface,
+            fontSize: typography.caption,
             fontWeight: "600",
         },
 
         contentBody: {
             backgroundColor: colors.surface,
-            marginTop: 10,
+            marginTop: spacing.xs,
             borderTopRightRadius: 40,
             borderTopLeftRadius: 40,
             flex: 1,
         },
 
         contentBodyInner: {
-            padding: 20,
-            gap: 12,
+            padding: spacing.lg * scale,
+            gap: spacing.sm,
         },
 
         sectionTitle: {
-            color: colors.textPrimary,
-            fontSize: 17,
+            color: colors.onSurface,
+            fontSize: typography.bodyLarge,
             fontWeight: "700",
-            marginBottom: 8,
+            marginBottom: spacing.xs,
         },
 
         exerciseRow: {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            paddingVertical: 12,
-            paddingHorizontal: 14,
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.sm,
             backgroundColor: colors.background,
-            borderRadius: 14,
+            borderRadius: radius.md,
         },
 
         exerciseName: {
-            color: colors.textPrimary,
-            fontSize: 15,
+            color: colors.onSurface,
+            fontSize: typography.footnote,
             fontWeight: "500",
         },
 
         exerciseSets: {
-            color: colors.textSecondary,
-            fontSize: 14,
+            color: colors.onSurface,
+            fontSize: typography.footnote,
         },
 
         // ----- Lịch tháng -----
         calenderView: {
-            marginBottom: 10,
+            marginBottom: spacing.sm,
             backgroundColor: colors.primary,
-            paddingVertical: 16,
-            paddingHorizontal: 12,
-            borderRadius: 28,
-            gap: 10,
+            paddingVertical: spacing.md * scale,
+            paddingHorizontal: spacing.sm * scale,
+            borderRadius: radius.xl,
+            gap: spacing.sm,
         },
 
         monthHeader: {
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: 4,
+            marginBottom: spacing.xxs,
         },
 
         monthNavButton: {
-            width: 32,
-            height: 32,
-            borderRadius: 16,
+            width: 32 * scale,
+            height: 32 * scale,
+            borderRadius: 16 * scale,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "rgba(255,255,255,0.12)",
+            backgroundColor: colors.primarySoft,
         },
 
         monthNavText: {
-            color: colors.textPrimary,
-            fontSize: 18,
+            color: colors.onPrimary,
+            fontSize: typography.bodyLarge,
             fontWeight: "700",
             lineHeight: 20,
         },
 
         monthTitle: {
-            color: colors.textPrimary,
-            fontSize: 16,
+            color: colors.onPrimary,
+            fontSize: typography.body,
             fontWeight: "700",
             textAlign: "center",
             textTransform: "capitalize",
@@ -471,9 +450,9 @@ const createStyles = (colors: colorType) =>
         weekLabel: {
             width: `${100 / 7}%`,
             textAlign: "center",
-            color: colors.textPrimary,
+            color: colors.onPrimary,
             opacity: 0.7,
-            fontSize: 12,
+            fontSize: typography.caption,
             fontWeight: "600",
         },
 
@@ -487,25 +466,25 @@ const createStyles = (colors: colorType) =>
             width: `${100 / 7}%`,
             alignItems: "center",
             justifyContent: "center",
-            paddingVertical: 4,
+            paddingVertical: spacing.xxs,
         },
 
         dayCircle: {
-            width: 32,
-            height: 32,
-            borderRadius: 16,
+            width: 32 * scale,
+            height: 32 * scale,
+            borderRadius: 16 * scale,
             alignItems: "center",
             justifyContent: "center",
         },
 
         dayCircleChecked: {
             backgroundColor: colors.surface,
-            borderRadius: '100%',
+            borderRadius: 16 * scale,
             overflow: 'hidden',
         },
 
         dayCircleUnchecked: {
-            backgroundColor: "rgba(255,255,255,0.12)",
+            backgroundColor: colors.primarySoft,
         },
 
         dayCircleToday: {
@@ -514,13 +493,21 @@ const createStyles = (colors: colorType) =>
         },
 
         dayNumber: {
-            color: colors.textPrimary,
-            fontSize: 13,
+            color: colors.onPrimary,
+            fontSize: typography.caption,
             fontWeight: "600",
         },
 
         dayNumberChecked: {
-            color: "#fff",
+            color: colors.onPrimary,
+        },
+
+        checkedInOverlay: {
+            backgroundColor: colors.overlay,
+            width: "100%",
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
         },
 
         dayNumberToday: {
@@ -530,31 +517,31 @@ const createStyles = (colors: colorType) =>
         legendRow: {
             flexDirection: "row",
             justifyContent: "center",
-            gap: 20,
-            marginTop: 8,
+            gap: spacing.lg,
+            marginTop: spacing.xs,
         },
 
         legendItem: {
             flexDirection: "row",
             alignItems: "center",
-            gap: 6,
+            gap: spacing.xs,
         },
 
         legendDot: {
-            width: 10,
-            height: 10,
-            borderRadius: 5,
+            width: 10 * scale,
+            height: 10 * scale,
+            borderRadius: 5 * scale,
         },
 
         legendText: {
-            color: colors.textPrimary,
-            fontSize: 12,
+            color: colors.onPrimary,
+            fontSize: typography.caption,
             opacity: 0.85,
         },
 
         modalOverlay: {
             flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
+            backgroundColor: colors.overlay,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -562,19 +549,19 @@ const createStyles = (colors: colorType) =>
         modalBox: {
             width: "80%",
             backgroundColor: colors.surface,
-            borderRadius: 24,
-            padding: 20,
+            borderRadius: radius.xl,
+            padding: spacing.lg,
             alignItems: "center",
-            gap: 8,
+            gap: spacing.xs,
         },
 
         closeButton: {
             position: "absolute",
             top: 10,
             right: 10,
-            width: 26,
-            height: 26,
-            borderRadius: 13,
+            width: 26 * scale,
+            height: 26 * scale,
+            borderRadius: 13 * scale,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: colors.background,
@@ -583,7 +570,7 @@ const createStyles = (colors: colorType) =>
 
         closeButtonText: {
             color: colors.textPrimary,
-            fontSize: 13,
+            fontSize: typography.caption,
             fontWeight: "700",
         },
 
@@ -591,36 +578,36 @@ const createStyles = (colors: colorType) =>
             width: "90%",
             height: "auto",
             aspectRatio: 1,
-            marginTop: 20,
-            borderRadius: 20,
-            marginBottom: 4,
+            marginTop: spacing.lg,
+            borderRadius: radius.xl,
+            marginBottom: spacing.xxs,
         },
 
         modalTitle: {
-            color: colors.textPrimary,
-            fontSize: 15,
+            color: colors.onSurface,
+            fontSize: typography.footnote,
             fontWeight: "700",
             textAlign: "center",
         },
 
         modalSubtitle: {
-            color: colors.textSecondary,
-            fontSize: 12,
+            color: colors.onSurface,
+            fontSize: typography.caption,
             textAlign: "center",
-            marginBottom: 6,
+            marginBottom: spacing.xs,
         },
 
         confirmButton: {
             backgroundColor: colors.primary,
-            paddingVertical: 8,
-            paddingHorizontal: 24,
-            borderRadius: 20,
-            marginTop: 4,
+            paddingVertical: spacing.xs,
+            paddingHorizontal: spacing.xl,
+            borderRadius: radius.pill,
+            marginTop: spacing.xxs,
         },
 
         confirmButtonText: {
-            color: colors.textPrimary,
-            fontSize: 13,
+            color: colors.onPrimary,
+            fontSize: typography.caption,
             fontWeight: "600",
         },
     });

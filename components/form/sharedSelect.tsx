@@ -1,5 +1,7 @@
 import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
+import { radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useState } from "react";
 import {
     Modal,
@@ -23,8 +25,8 @@ export default function SharedSelect({
     const [isOpen, setIsOpen] = useState(false);
 
     const { colors } = useColor();
-
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const styles = createStyles(colors, scale);
 
     const selectedOption = options.find(
         (option) => option.value === selected
@@ -99,21 +101,21 @@ export default function SharedSelect({
     );
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         selectBox: {
             width: "100%",
-            height: 52,
+            minHeight: 48,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingHorizontal: 16,
+            paddingHorizontal: spacing.md * scale,
 
             backgroundColor: colors.background,
             borderWidth: 1,
-            borderColor: colors.primary,
+            borderColor: colors.border,
 
-            borderRadius: 14,
+            borderRadius: radius.md,
         },
 
         selectBoxPressed: {
@@ -121,12 +123,12 @@ const createStyles = (colors: colorType) =>
         },
 
         selectText: {
-            fontSize: 16,
+            fontSize: typography.body,
             color: colors.textPrimary,
         },
 
         arrow: {
-            fontSize: 20,
+            fontSize: typography.title,
             color: colors.textSecondary,
             marginTop: -5,
         },
@@ -136,53 +138,53 @@ const createStyles = (colors: colorType) =>
             justifyContent: "center",
             alignItems: "center",
 
-            backgroundColor: "#00000080",
+            backgroundColor: colors.overlay,
         },
 
         modalBody: {
             width: "82%",
             maxHeight: "65%",
 
-            backgroundColor: colors.surface,
+            backgroundColor: colors.surfaceElevated,
 
-            borderRadius: 24,
-            paddingTop: 20,
-            paddingBottom: 10,
+            borderRadius: radius.xl,
+            paddingTop: spacing.lg * scale,
+            paddingBottom: spacing.xs * scale,
             overflow: "hidden",
             elevation: 10,
         },
 
         modalTitle: {
-            fontSize: 20,
+            fontSize: typography.title,
             fontWeight: "700",
 
-            color: colors.textPrimary,
+            color: colors.onSurface,
 
             textAlign: "center",
-            marginBottom: 12,
+            marginBottom: spacing.sm * scale,
         },
 
         list: {
-            paddingHorizontal: 12,
-            paddingBottom: 8,
+            paddingHorizontal: spacing.sm * scale,
+            paddingBottom: spacing.xs * scale,
         },
 
         item: {
-            minHeight: 50,
+            minHeight: 48 * scale,
             justifyContent: "center",
             alignItems: "center",
 
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderRadius: 12,
+            paddingHorizontal: spacing.md * scale,
+            paddingVertical: spacing.sm * scale,
+            borderRadius: radius.md,
         },
 
         itemPressed: {
-            backgroundColor: colors.primary,
+            opacity: 0.76,
         },
 
         itemText: {
-            fontSize: 16,
-            color: colors.textPrimary,
+            fontSize: typography.body,
+            color: colors.onSurface,
         },
     });

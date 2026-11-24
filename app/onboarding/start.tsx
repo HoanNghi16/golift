@@ -5,6 +5,8 @@ import PrimaryHeader from "@/components/layout/header";
 import { useColor } from "@/providers/colorProvider";
 import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
+import { spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -29,7 +31,8 @@ export default function StartProfile() {
     },[])
     
 
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const styles = createStyles(colors, scale);
 
     return (
         <View style={styles.startCont}>
@@ -166,7 +169,7 @@ export default function StartProfile() {
     );
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         startCont: {
             flex: 1,
@@ -178,9 +181,9 @@ const createStyles = (colors: colorType) =>
         },
 
         logo: {
-            width: 100,
-            height: 100,
-            borderRadius: 30,
+            width: 100 * scale,
+            height: 100 * scale,
+            borderRadius: 24,
             alignSelf: "center",
         },
 
@@ -189,34 +192,34 @@ const createStyles = (colors: colorType) =>
 
             backgroundColor: colors.surface,
 
-            paddingHorizontal: 30,
-            paddingTop: 50,
+            paddingHorizontal: spacing.xl * scale,
+            paddingTop: spacing.xxl * scale,
 
-            borderTopLeftRadius: 40,
-            borderTopRightRadius: 40,
+            borderTopLeftRadius: 32,
+            borderTopRightRadius: 32,
 
-            marginTop: 30,
+            marginTop: spacing.lg * scale,
 
             overflow: "hidden",
         },
 
         formContent: {
-            gap: 24,
-            paddingBottom: 20,
+            gap: spacing.xl * scale,
+            paddingBottom: spacing.lg * scale,
         },
 
         inputWrapper: {
-            gap: 7,
+            gap: spacing.xs * scale,
         },
 
         inputDescription: {
-            fontSize: 15,
-            color: colors.textPrimary,
+            fontSize: typography.footnote,
+            color: colors.onSurface,
             fontWeight: "600",
         },
 
         buttonZone: {
-            paddingTop: 10,
-            paddingBottom: 10,
+            paddingTop: spacing.xs,
+            paddingBottom: spacing.xs,
         },
     });

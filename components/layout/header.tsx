@@ -1,6 +1,8 @@
 import { useColor } from "@/providers/colorProvider";
 import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
+import { radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { Palette } from "lucide-react-native";
 import { useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -14,12 +16,13 @@ export default function PrimaryHeader({
     const [open, setOpen] = useState(false);
     const { colors, setSelectedTheme } = useColor();
     const {headerTitle} = useTitle()
+    const { scale } = useResponsiveLayout();
 
     const onSelect = (theme: string)=>{
         setSelectedTheme?.(theme)
     }
 
-    const styles = createStyles(colors);
+    const styles = createStyles(colors, scale);
 
     return (
         <View
@@ -124,31 +127,29 @@ export default function PrimaryHeader({
     );
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         mainHeader: {
             display: "flex",
-            gap: 4,
-            padding: 10,
+            gap: spacing.xxs,
+            padding: spacing.sm * scale,
             alignItems: "center",
             flexDirection: "row",
             top: 0,
-            height: 60,
+            minHeight: 56 * scale,
 
             backgroundColor: colors.background,
 
-            borderBottomWidth: 1,
-            borderBottomColor: colors.background,
         },
         themeChangeButton:{
-            marginRight: 10,
+            marginRight: spacing.xs,
             justifyContent: 'center',
         },
         mainHeaderTitle: {
             flex: 1,
             color: colors.textPrimary,
-            fontSize: 18,
-            marginLeft: 8,
+            fontSize: typography.bodyLarge,
+            marginLeft: spacing.xs,
             fontWeight: "bold",
         },
 
@@ -156,18 +157,18 @@ const createStyles = (colors: colorType) =>
         // ONBOARD
         // =========================
         onboardHeader: {
-            gap: 8,
-            padding: 15,
+            gap: spacing.xs,
+            padding: spacing.md * scale,
             alignItems: "center",
             flexDirection: "row",
 
             top: 0,
-            height: 80,
+            minHeight: 72 * scale,
         },
 
         onboardHeaderTitle: {
             color: colors.textPrimary,
-            fontSize: 18,
+            fontSize: typography.bodyLarge,
             fontWeight: "bold",
         },
         overlay: {
@@ -175,34 +176,34 @@ const createStyles = (colors: colorType) =>
             justifyContent: "center",
             alignItems: "center",
 
-            backgroundColor: "#00000080",
+            backgroundColor: colors.overlay,
         },
         modalBody: {
             width: "82%",
             maxHeight: "65%",
 
-            backgroundColor: colors.surface,
+            backgroundColor: colors.surfaceElevated,
 
-            borderRadius: 24,
-            paddingTop: 20,
-            paddingBottom: 10,
+            borderRadius: radius.xl,
+            paddingTop: spacing.lg * scale,
+            paddingBottom: spacing.xs * scale,
             overflow: "hidden",
             elevation: 10,
         },
 
         modalTitle: {
-            fontSize: 20,
+            fontSize: typography.title,
             fontWeight: "700",
 
-            color: colors.textPrimary,
+            color: colors.onSurface,
 
             textAlign: "center",
-            marginBottom: 12,
+            marginBottom: spacing.sm * scale,
         },
 
         list: {
-            paddingHorizontal: 12,
-            paddingBottom: 8,
+            paddingHorizontal: spacing.sm * scale,
+            paddingBottom: spacing.xs * scale,
         },
 
         item: {
@@ -210,17 +211,17 @@ const createStyles = (colors: colorType) =>
             justifyContent: "center",
             alignItems: "center",
 
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderRadius: 12,
+            paddingHorizontal: spacing.md * scale,
+            paddingVertical: spacing.sm * scale,
+            borderRadius: radius.md,
         },
 
         itemPressed: {
-            backgroundColor: colors.primary,
+            opacity: 0.76,
         },
 
         itemText: {
-            fontSize: 16,
-            color: colors.textPrimary,
+            fontSize: typography.body,
+            color: colors.onSurface,
         },
     });

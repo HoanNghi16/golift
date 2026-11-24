@@ -1,5 +1,7 @@
 import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
+import { radius, spacing } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function GoLiftText({
@@ -10,8 +12,8 @@ export default function GoLiftText({
     fontSize?: number;
 }) {
     const { colors } = useColor();
-
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const styles = createStyles(colors, scale);
 
     if (backgroundShown) {
         return (
@@ -40,12 +42,12 @@ export default function GoLiftText({
     );
 }
 
-const createStyles = (colors: colorType) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         optionalContainer: {
-            padding: 6,
+            padding: spacing.xs * scale,
             backgroundColor: colors.surface,
-            borderRadius: 10,
+            borderRadius: radius.md,
             flexDirection: "row",
         },
 
@@ -56,12 +58,12 @@ const createStyles = (colors: colorType) =>
         go: {
             fontFamily: "Arial",
             fontWeight: "bold",
-            color: colors.textPrimary,
+            color: colors.onSurface,
         },
 
         lift: {
             fontFamily: "Arial",
             fontWeight: "bold",
-            color: colors.primaryText,
+            color: colors.accentText,
         },
     });

@@ -2,6 +2,9 @@ import SharedButton from "@/components/form/sharedButton";
 import SharedSelect from "@/components/form/sharedSelect";
 import PrimaryHeader from "@/components/layout/header";
 import { useColor } from "@/providers/colorProvider";
+import { spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { colorType } from "@/types/color";
 import { useTitle } from "@/providers/titleProvider";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -20,7 +23,8 @@ export default function ThemeConfig() {
         setSelectedTheme
     } = useColor();
 
-    const styles = createStyles(colors);
+    const { scale } = useResponsiveLayout();
+    const styles = createStyles(colors, scale);
     
     const { setHeaderTitle } = useTitle()
 
@@ -89,7 +93,7 @@ export default function ThemeConfig() {
     );
 }
 
-const createStyles = (colors: any) =>
+const createStyles = (colors: colorType, scale: number) =>
     StyleSheet.create({
         startCont: {
             flex: 1,
@@ -98,26 +102,26 @@ const createStyles = (colors: any) =>
 
         mainContent: {
             justifyContent: "space-between",
-            paddingTop: 60,
+            paddingTop: spacing.xxl * scale,
             flex: 1,
         },
 
         logo: {
-            width: 200,
-            height: 200,
-            borderRadius: 30,
+            width: 200 * scale,
+            height: 200 * scale,
+            borderRadius: 24,
             alignSelf: "center",
         },
 
         formView: {
             backgroundColor: colors.surface,
 
-            paddingHorizontal: 30,
-            paddingTop: 50,
-            paddingBottom: 20,
+            paddingHorizontal: spacing.xl * scale,
+            paddingTop: spacing.xxl * scale,
+            paddingBottom: spacing.md * scale,
 
-            borderTopLeftRadius: 40,
-            borderTopRightRadius: 40,
+            borderTopLeftRadius: 32,
+            borderTopRightRadius: 32,
 
             marginTop: "auto",
 
@@ -126,17 +130,17 @@ const createStyles = (colors: any) =>
         },
 
         inputWrapper: {
-            gap: 7,
+            gap: spacing.xs * scale,
         },
 
         inputDescription: {
-            fontSize: 15,
-            color: colors.textPrimary,
+            fontSize: typography.footnote,
+            color: colors.onSurface,
             fontWeight: "600",
         },
 
         buttonZone: {
             backgroundColor: colors.surface,
-            padding: 20,
+            padding: spacing.lg * scale,
         },
     });

@@ -1,6 +1,8 @@
 import SharedInput from "@/components/form/sharedInput";
 import SharedSelect from "@/components/form/sharedSelect";
 import ExpandableView from "@/components/ui/expandableView";
+import { getTabBarContentInset, radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
 import { metaType, scheludeDayType } from "@/types/schelude";
@@ -10,9 +12,9 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    useWindowDimensions,
     View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 
@@ -20,10 +22,12 @@ export default function CreateSchelude() {
 
     // Colors & style 
     const { colors } = useColor();
-    const styles = createStyleSheet(colors);
+    const { contentWidth, scale } = useResponsiveLayout();
+    const insets = useSafeAreaInsets();
+    const styles = createStyleSheet(colors, scale);
 
     // Screen var
-    const {width} = useWindowDimensions()
+    const width = contentWidth;
     const scrollRef = useRef<ScrollView| null>(null)
     const [currentStep, setCurrentStep] = useState<number>(1)
     const [metaData, setMetaData] = useState<metaType>({
@@ -89,8 +93,9 @@ export default function CreateSchelude() {
         >
 
             {/* Step 0: Nhập meta data cho lịch tập */}
-            <View
-                style={[styles.scrollContent, {width}]}
+            <ScrollView
+                style={{width, flex: 1}}
+                contentContainerStyle={[styles.scrollContent, {paddingBottom: getTabBarContentInset(scale, insets.bottom)}]}
             >
                 <Text style={styles.pageTitle}>Thông tin lịch tập</Text>
 
@@ -152,12 +157,12 @@ export default function CreateSchelude() {
                 >
                     <Text style={styles.nextButtonText}>Tiếp theo</Text>
                 </TouchableOpacity>
-            </View>
+            </ScrollView>
 
             {/* Step 1: Cấu hình các ngày tập */}
             <ScrollView
                 style={{flex: 1, backgroundColor: colors.background}}
-                contentContainerStyle={[styles.scrollContent, {width}]}
+                contentContainerStyle={[styles.scrollContent, {width, paddingBottom: getTabBarContentInset(scale, insets.bottom)}]}
             >
                 <Text style={styles.pageTitle}>Chi tiết lịch tập</Text>
 
@@ -194,57 +199,57 @@ export default function CreateSchelude() {
     );
 }
 
-export const createStyleSheet = (colors: colorType) =>
+export const createStyleSheet = (colors: colorType, scale = 1) =>
     StyleSheet.create({
         scrollContent: {
             backgroundColor: colors.background,
-            padding: 20,
-            gap: 16,
+            padding: spacing.lg * scale,
+            gap: spacing.md * scale,
         },
         pageTitle: {
-            fontSize: 20,
+            fontSize: typography.title,
             fontWeight: "700",
-            color: colors.primaryText,
+            color: colors.accentText,
         },
         metaDataContainer: {
             backgroundColor: colors.surface,
-            padding: 20,
-            borderRadius: 20,
-            gap: 16,
+            padding: spacing.lg * scale,
+            borderRadius: radius.xl,
+            gap: spacing.md * scale,
         },
         field: {
-            gap: 6,
+            gap: spacing.xs * scale,
         },
         label: {
-            fontSize: 13,
+            fontSize: typography.caption,
             fontWeight: "600",
-            color: colors.textSecondary,
+            color: colors.onSurface,
         },
         nextButton: {
             backgroundColor: colors.primary,
-            borderRadius: 16,
-            paddingVertical: 14,
+            borderRadius: radius.lg,
+            paddingVertical: spacing.sm * scale,
             alignItems: "center",
             justifyContent: "center",
         },
         backButton:{
             backgroundColor: colors.surface,
-            borderRadius: 16,
-            paddingVertical: 14,
+            borderRadius: radius.lg,
+            paddingVertical: spacing.sm * scale,
             alignItems: "center",
             justifyContent: "center",
         },
         backButtonText:{
-            color: colors.textSecondary,
-            fontSize: 15,
+            color: colors.onSurface,
+            fontSize: typography.footnote,
             fontWeight: "700",
         },
         nextButtonDisabled: {
             opacity: 0.4,
         },
         nextButtonText: {
-            color: colors.background,
-            fontSize: 15,
+            color: colors.onPrimary,
+            fontSize: typography.footnote,
             fontWeight: "700",
         },
     });

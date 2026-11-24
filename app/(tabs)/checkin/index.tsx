@@ -1,13 +1,16 @@
 import SharedButton from "@/components/form/sharedButton";
 import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
+import { radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { Modal, StyleSheet, Text, View } from "react-native";
 
 export default function CheckinScreen() {
     const [permission, requestPermission] = useCameraPermissions();
     const {colors} = useColor()
-    const styles = createStyles(colors)
+    const { scale } = useResponsiveLayout()
+    const styles = createStyles(colors, scale)
 
 
     return (
@@ -16,7 +19,7 @@ export default function CheckinScreen() {
                 <Modal  transparent={true} visible={permission?.granted === false} animationType="fade">
                     <View style={styles.modalOverlay} >
                         <View style={styles.modalBox}>
-                            <Text style={{color: colors.textPrimary, fontSize: 16, textAlign:"center"}}>
+                            <Text style={{color: colors.onSurface, fontSize: typography.body, textAlign:"center"}}>
                                 Vui lòng cấp quyền truy cập camera để sử dụng tính năng này
                             </Text>
                             <SharedButton title="Cho phép truy cập" onPress={()=>{requestPermission?.()}} ></SharedButton>
@@ -34,10 +37,10 @@ export default function CheckinScreen() {
         </>
     )
 }
-const createStyles = (colors: colorType)=> StyleSheet.create({
+const createStyles = (colors: colorType, scale: number)=> StyleSheet.create({
         modalOverlay: {
             flex: 1,
-            backgroundColor: "rgba(0,0,0,0.5)",
+            backgroundColor: colors.overlay,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -45,9 +48,9 @@ const createStyles = (colors: colorType)=> StyleSheet.create({
         modalBox: {
             width: "80%",
             backgroundColor: colors.surface,
-            borderRadius: 24,
-            padding: 20,
+            borderRadius: radius.xl,
+            padding: spacing.lg * scale,
             alignItems: "center",
-            gap: 8,
+            gap: spacing.xs * scale,
         },
 })

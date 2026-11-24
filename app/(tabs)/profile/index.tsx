@@ -4,6 +4,9 @@ import SharedSelect from "@/components/form/sharedSelect";
 import { useColor } from "@/providers/colorProvider";
 import { useTitle } from "@/providers/titleProvider";
 import { colorType } from "@/types/color";
+import { getTabBarContentInset, radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
 import { Pencil } from "lucide-react-native";
 import { useState } from "react";
@@ -20,7 +23,9 @@ import {
 export default function ProfileScreen() {
     const { setHeaderTitle } = useTitle()
     const { colors } = useColor();
-    const styles = createStyleSheet(colors);
+    const { scale } = useResponsiveLayout();
+    const insets = useSafeAreaInsets();
+    const styles = createStyleSheet(colors, scale);
     const [gender, setGender] = useState<"male" | "female" | "other" | null>(null)
     const [avatarUri, setAvatarUri] = useState<string | null>(null);
     const [name, setName] = useState("Nguyễn Văn A");
@@ -49,7 +54,7 @@ export default function ProfileScreen() {
 
     return (
         
-            <ScrollView style={styles.container}>
+            <ScrollView style={styles.container} contentContainerStyle={[styles.contentContainer, { paddingBottom: getTabBarContentInset(scale, insets.bottom) }]}>
                 {/* Avatar */}
                 <View style={styles.avatarSection}>
                     <TouchableOpacity style={styles.avatarWrapper} onPress={pickAvatar}>
@@ -61,7 +66,7 @@ export default function ProfileScreen() {
                             </View>
                         )}
                         <View style={styles.editBadge}>
-                            <Pencil color={colors.surface} size={14}/>
+                            <Pencil color={colors.onPrimary} size={14}/>
                         </View>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={pickAvatar}>
@@ -115,56 +120,57 @@ export default function ProfileScreen() {
     );
 }
 
-const AVATAR_SIZE = 100;
-
-const createStyleSheet = (colors: colorType) =>
+const createStyleSheet = (colors: colorType, scale: number) =>
     StyleSheet.create({
         container: {
-            paddingTop: 10,
+            paddingTop: spacing.xs * scale,
             flex: 1,
             backgroundColor: colors.background,
         },
+        contentContainer: {
+            flexGrow: 1,
+        },
         avatarSection: {
             alignItems: "center",
-            marginBottom: 16,
+            marginBottom: spacing.md * scale,
         },
         avatarWrapper: {
-            width: AVATAR_SIZE,
-            height: AVATAR_SIZE,
-            marginBottom: 12,
+            width: 100 * scale,
+            height: 100 * scale,
+            marginBottom: spacing.sm * scale,
         },
         avatar: {
-            width: AVATAR_SIZE,
-            height: AVATAR_SIZE,
-            borderRadius: AVATAR_SIZE / 2,
+            width: 100 * scale,
+            height: 100 * scale,
+            borderRadius: 50 * scale,
         },
         avatarPlaceholder: {
             backgroundColor: colors.surface,
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
-            borderColor: colors.textSecondary,
+            borderColor: colors.border,
             borderStyle: "dashed",
         },
         avatarPlaceholderText: {
-            fontSize: 32,
-            color: colors.textSecondary,
+            fontSize: typography.display,
+            color: colors.onSurface,
         },
         mainWrapper:{
-            borderTopStartRadius: 30,
-            borderTopEndRadius: 30,
-            paddingTop: 24,
-            padding: 22,
-            paddingBottom: 40,
+            borderTopStartRadius: radius.xl,
+            borderTopEndRadius: radius.xl,
+            paddingTop: spacing.xl * scale,
+            padding: spacing.lg * scale,
+            paddingBottom: spacing.xxl * scale,
             backgroundColor: colors.surface,
         },
         editBadge: {
             position: "absolute",
             bottom: 0,
             right: 0,
-            width: 28,
-            height: 28,
-            borderRadius: 14,
+            width: 28 * scale,
+            height: 28 * scale,
+            borderRadius: 14 * scale,
             backgroundColor: colors.primary,
             alignItems: "center",
             justifyContent: "center",
@@ -172,20 +178,20 @@ const createStyleSheet = (colors: colorType) =>
             borderColor: colors.background,
         },
         editBadgeText: {
-            color: colors.primaryText,
-            fontSize: 13,
+            color: colors.accentText,
+            fontSize: typography.caption,
         },
         changeAvatarText: {
-            color: colors.primary,
-            fontSize: 14,
+            color: colors.onSurface,
+            fontSize: typography.footnote,
             fontWeight: "600",
         },
         infoSection: {
-            marginBottom: 16,
+            marginBottom: spacing.md * scale,
         },
         label: {
-            fontSize: 13,
-            color: colors.textSecondary,
-            marginBottom: 8,
+            fontSize: typography.caption,
+            color: colors.onSurface,
+            marginBottom: spacing.xs * scale,
         },
     });

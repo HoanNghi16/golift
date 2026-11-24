@@ -1,5 +1,7 @@
 import { useColor } from "@/providers/colorProvider";
 import { colorType } from "@/types/color";
+import { layout, radius, spacing, typography } from "@/constants/design";
+import { useResponsiveLayout } from "@/hooks/use-responsive-layout";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname, useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -25,7 +27,10 @@ const TABS = [
 export default function PrimaryTabBar() {
     const { colors } = useColor();
     const insets = useSafeAreaInsets();
-    const styles = createStyles(colors, insets.bottom);
+    const { scale, contentWidth } = useResponsiveLayout();
+    const tabWidth = Math.min(contentWidth * 0.9, 430);
+    const sideOffset = (contentWidth - tabWidth) / 2;
+    const styles = createStyles(colors, insets.bottom, scale, tabWidth, sideOffset);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -77,7 +82,7 @@ export default function PrimaryTabBar() {
                             router.push("/checkin");
                         }}
                     >
-                        <Ionicons name="scan-outline" size={28} color="#fff" />
+                        <Ionicons name="scan-outline" size={28} color={colors.onPrimary} />
                     </Pressable>
 
                     <Text style={styles.checkInLabel}>Check-in</Text>
@@ -97,26 +102,30 @@ export default function PrimaryTabBar() {
     );
 }
 
-const createStyles = (colors: colorType, bottomInset: number) =>
+const createStyles = (colors: colorType, bottomInset: number, scale: number, tabWidth: number, sideOffset: number) =>
     StyleSheet.create({
         tabContainer: {
             flexDirection: "row",
             alignItems: "center",
             position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            borderRadius: 20,
+            bottom: bottomInset + layout.tabBarBottomSpacing * scale,
+            left: sideOffset,
+            width: tabWidth,
+            borderRadius: radius.pill,
 
-            height: 72 + bottomInset,
+            height: layout.tabBarHeight * scale,
 
-            backgroundColor: colors.background,
+            backgroundColor: colors.surfaceElevated,
 
-            margin: 14,
-
-            paddingHorizontal: 6,
-            paddingTop: 10,
-            paddingBottom: bottomInset, // đẩy nội dung lên khỏi thanh điều hướng điện thoại
+            paddingHorizontal: spacing.xs * scale,
+            paddingTop: spacing.xs * scale,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.border,
+            elevation: 12,
+            shadowColor: colors.overlay,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.22,
+            shadowRadius: 16,
         },
 
         tabItem: {
@@ -125,24 +134,24 @@ const createStyles = (colors: colorType, bottomInset: number) =>
             alignItems: "center",
             justifyContent: "center",
 
-            gap: 4,
+            gap: spacing.xxs,
         },
 
         tabLabel: {
-            fontSize: 11,
+            fontSize: typography.caption,
             fontWeight: "500",
         },
 
         checkInWrapper: {
             flex: 1,
             alignItems: "center",
-            marginTop: -32,
+            marginTop: -32 * scale,
         },
 
         checkInButton: {
-            width: 64,
-            height: 64,
-            borderRadius: 32,
+            width: 64 * scale,
+            height: 64 * scale,
+            borderRadius: 32 * scale,
 
             backgroundColor: colors.primary,
 
@@ -159,8 +168,8 @@ const createStyles = (colors: colorType, bottomInset: number) =>
         },
 
         checkInLabel: {
-            marginTop: 2,
-            fontSize: 11,
+            marginTop: spacing.xxs,
+            fontSize: typography.caption,
             fontWeight: "600",
             color: colors.textPrimary,
         },
